@@ -9,8 +9,7 @@ import pickle
 
 def process_metadata(metadata_file,fields=None, get_ids=None,output_dir = './processed/',put_in_op_dir=False):
     '''
-    
-    
+    Load metadata from json file (compressed ok) filtered by get_ids or field of paper into pandas DataFrame and save it.
 
     Parameters
     ----------
@@ -31,6 +30,7 @@ def process_metadata(metadata_file,fields=None, get_ids=None,output_dir = './pro
         DESCRIPTION.
 
     '''
+
     file_name_without_path_or_ext = metadata_file.split('/')[-1].split('.')[0]
     # Go through metadata files to get relevant paper ids and titles
     ids = []; title = []; field = [];
@@ -82,9 +82,11 @@ def process_metadata(metadata_file,fields=None, get_ids=None,output_dir = './pro
         pickle.dump(meta_df, f)
     return meta_df_file
 
-def process_pdf(meta_df_file, pdf_file,fields=None,get_ids=None, output_dir = './processed/'):
+def process_pdf(meta_df_file, pdf_file, fields=None,get_ids=None, output_dir = './processed/'):
     '''
-    
+    Load parsed pdf json file (compressed ok) into pd DF, filter based on  ids in corresponding metadata file.
+
+    'fields' and 'get_ids' could be used in the future to further filter. Not implemented currently.
 
     Parameters
     ----------
@@ -179,7 +181,7 @@ def process_pdf(meta_df_file, pdf_file,fields=None,get_ids=None, output_dir = '.
 
 def process_batch(metadata_file,pdf_file, fields=None, get_ids=None, output_dir = './processed/'):
     '''
-    
+    Process metadata and pdf parses filtered by fields (x)or Ids and save dataframes to output_dir.
     Parameters
     ----------
     metadata_file : TYPE
@@ -204,3 +206,20 @@ def process_batch(metadata_file,pdf_file, fields=None, get_ids=None, output_dir 
     meta_df_file = process_metadata(metadata_file,fields,get_ids,output_dir)
     text_df_file = process_pdf(meta_df_file,pdf_file,fields,get_ids,output_dir)
     return meta_df_file,text_df_file
+
+def pappu():
+    print("pappu")
+
+def with_keywords(df):
+    key_words = df['key_words'][df.key_words.str.len() > 0]
+    return df.loc[key_words.index]  # papers with key words
+
+
+def get_links(paper_refs):
+    'Retreive the paper_ids (links) from refrences of the paper'
+    refs, links = [], []
+    for key,value in paper_refs.items():
+        if value['link']:
+            links.append(value['link'])
+            refs.append(key)
+    return links, refs

@@ -262,8 +262,6 @@ def process_sections(textdf, file_name=''):
 def clean_section(text_df, file_name='', output_dir='',section_lvl = False):
     
     start = time.time()
-    
-
     # if index is not paper_id
     if text_df.index.name is None: 
         print('changing index to paper_id')
@@ -370,8 +368,6 @@ def clean_section(text_df, file_name='', output_dir='',section_lvl = False):
 
     t = time.time()
     print(t-start)
-
-
     
     word_list =  [item for sublist in tokenized_contents for item in sublist]
     counter=collections.Counter(word_list)
