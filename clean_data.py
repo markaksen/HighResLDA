@@ -159,7 +159,7 @@ def clean_pdf(text_df, file_name='', output_dir='',section_lvl = False):
     contents = itertools.compress(contents, inds)
     ids = list(itertools.compress(ids, inds))
     
-    key_words = text_df.loc[ids]['key_words'].values
+    key_words = text_df.loc[ids]['key_words'].tolist()
     print('Tokenizing')
     
     # Tokenize words + remove punctuation
@@ -234,10 +234,10 @@ def puppy():
 
 def process_sections(textdf, file_name=''):
     def merge_sections(doc):
-        sections = doc[4] # doc['body_text']
+        sections = doc[3] # doc['body_text']
         # if type(sections) is list and len(sections)>0:
         # section_titles = [x['section'] for x in sections]
-        paper_id = doc[1] # doc['paper_id']
+        paper_id = doc[0] # doc['paper_id']
         texts = []; titles = [];
         current_text = sections[0]['text']
         # current_title = section_titles[0]
@@ -259,7 +259,7 @@ def process_sections(textdf, file_name=''):
     total_df = pd.DataFrame(columns = ['whole_text', 'section_titles', 'paper_id'])
     for row in textdf.itertuples():
         # row[0] is index
-        if type(row[4]) is list and len(row[4])>0: # row[4] is body_text
+        if type(row[3]) is list and len(row[3])>0: # row[3] is body_text
             sections_df = merge_sections(row)
             total_df = total_df.append(sections_df)
         else:
