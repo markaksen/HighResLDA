@@ -215,48 +215,56 @@ def clean_pdf(text_df, file_name='', output_dir='',section_lvl = False):
     
     word_list =  [item for sublist in tokenized_contents for item in sublist]
     counter=collections.Counter(word_list)
+
+    d = {'dct': dct, 'corpus': corpus, 'docs': tokenized_contents,
+         'counter': counter, 'ids': ids, 'word_list': word_list,
+         'key_words': key_words}
     
     if file_name:
         os.makedirs(output_dir, exist_ok=True)
         output_file_name = output_dir + file_name + '_clean.pkl'
 
 
-        with open(output_file_name, 'wb') as f:  # Python 3: open(..., 'wb') 
-            d = {'dct': dct, 'corpus': corpus, 'docs': tokenized_contents, 
-                 'counter': counter, 'ids': ids, 'word_list':word_list,
-                 'key_words':key_words}
+        with open(output_file_name, 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump(d, f)
     return d
 
+def puppy():
+    print('puppy')
+
 def process_sections(textdf, file_name=''):
     def merge_sections(doc):
-        sections = doc['body_text']
-        #print(len(sections))
-        #print(sections[0])
-        if type(sections) is list and len(sections)>0:
-            section_titles = [x['section'] for x in sections]
-            paper_id = doc['paper_id']
-            texts = []; titles = [];
-            current_text = sections[0]['text']
-            current_title = section_titles[0]
-            for i in range(1,len(sections)):
-                #print(i)
-                if section_titles[i] == current_title:
-                    current_text = current_text + ' ' + sections[i]['text']
-                else: 
-                    texts.append(current_text)
-                    titles.append(current_title)
-                    current_title = section_titles[i]
-                    current_text = sections[i]['text']
-            sections_df = pd.DataFrame({'whole_text': texts, 'titles':titles, 'paper_id':paper_id})
-            return sections_df
+        sections = doc[4] # doc['body_text']
+        # if type(sections) is list and len(sections)>0:
+        # section_titles = [x['section'] for x in sections]
+        paper_id = doc[1] # doc['paper_id']
+        texts = []; titles = [];
+        current_text = sections[0]['text']
+        # current_title = section_titles[0]
+        current_title = sections[0]['section']
+        for i in range(1, len(sections)):
+            #print(i)
+            if sections[i]['section'] == current_title:
+                current_text = current_text + ' ' + sections[i]['text']
+            else:
+                texts.append(current_text)
+                titles.append(current_title)
+                current_title = sections[i]['section']
+                current_text = sections[i]['text']
+        sections_df = pd.DataFrame({'whole_text': texts, 'section_titles':titles, 'paper_id':paper_id})
+        return sections_df
+        # else:
+        #     return []
+
+    total_df = pd.DataFrame(columns = ['whole_text', 'section_titles', 'paper_id'])
+    for row in textdf.itertuples():
+        # row[0] is index
+        if type(row[4]) is list and len(row[4])>0: # row[4] is body_text
+            sections_df = merge_sections(row)
+            total_df = total_df.append(sections_df)
         else:
-            return []
-    total_df = pd.DataFrame(columns = ['whole_text', 'titles', 'paper_id'])
-    for index,row in textdf.iterrows():
-        #print(index)
-        
-        total_df = total_df.append(merge_sections(row))
+            # skip papers that don't have body text (row[4])
+            continue
     return total_df
 
 def clean_section(text_df, file_name='', output_dir='',section_lvl = False):
