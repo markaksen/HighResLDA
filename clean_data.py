@@ -54,12 +54,16 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
     return texts_out
 
 # Preprocessing: remove short text
-def find_longer_text(texts,k=200):
-    return list(map(lambda x: len(x.split())>k,texts))
+def find_longer_text(texts,k=50):
+    return list(map(lambda x: len(x.split())>=k,texts))
     
 #     lengths = list(map(lambda x: len(x.split()), texts))
 #     return [val >= k for val in lengths]
     #return [idx for idx, val in enumerate(lengths) if val >= k] 
+
+# Preprocessing: remove short text for word list
+def find_longer_text_list(texts,k=50):
+    return list(map(lambda x: len(x)>=k,texts))
 
 # Preprocessing: alpha num
 def keep_alphanum(words):
@@ -77,6 +81,10 @@ def keep_nouns(words):
 def keep_longer_words(words):
     return list(filter(lambda x: (len(x) >= 3), words))
     #return [word for word in words if len(word) >= 3]
+
+# Preprocessing: filter by word length (>= 3 and <= 20)
+def filter_word_length(words):
+    return list(filter(lambda x:(len(x) >= 3 and len(x) <= 20), words))
 
 # Preprocessing: lemmatize
 from nltk.stem import WordNetLemmatizer
@@ -156,8 +164,10 @@ def clean_pdf(text_df, file_name='', output_dir='',section_lvl = False):
 
     # Preprocessing: remove short text
     inds = find_longer_text(contents)
-    contents = itertools.compress(contents, inds)
-    ids = list(itertools.compress(ids, inds))
+    contents = [i for indx,i in enumerate(contents) if inds[indx] == True]
+    ids = [i for indx,i in enumerate(ids) if inds[indx]==True]
+    #contents = itertools.compress(contents, inds)
+    #ids = list(itertools.compress(ids, inds))
     
     key_words = text_df.loc[ids]['key_words'].tolist()
     print('Tokenizing')
@@ -177,8 +187,8 @@ def clean_pdf(text_df, file_name='', output_dir='',section_lvl = False):
     
     # Keep longer words
 #     word_list = [keep_longer_words(words) for words in  word_list]
-    tokenized_contents = map(keep_longer_words,  tokenized_contents)
-    
+    #tokenized_contents = map(keep_longer_words,  tokenized_contents)
+    tokenized_contents = map(filter_word_length, tokenized_contents)
     
     t = time.time()
     print(t-start)
@@ -195,6 +205,9 @@ def clean_pdf(text_df, file_name='', output_dir='',section_lvl = False):
     
     print('Bag of Words Representation')
     tokenized_contents = list(tokenized_contents)
+    
+    inds = find_longer_text_list(tokenized_contents)
+    tokenized_contents = [i for indx,i in enumerate(tokenized_contents) if inds[indx] == True]
 
     dct = corpora.Dictionary(tokenized_contents) # make dct before corpus
 #     doc2bow = partial(dct.doc2bow,allow_update=True)
@@ -213,12 +226,13 @@ def clean_pdf(text_df, file_name='', output_dir='',section_lvl = False):
 
 
     
-    word_list =  [item for sublist in tokenized_contents for item in sublist]
-    counter=collections.Counter(word_list)
+    word_list =  [[item for item in sublist] for sublist in tokenized_contents]
+    #counter=collections.Counter(word_list)
+    counter = collections.Counter((x for xs in word_list for x in set(xs)))
+
 
     d = {'dct': dct, 'corpus': corpus, 'docs': tokenized_contents,
-         'counter': counter, 'ids': ids, 'word_list': word_list,
-         'key_words': key_words}
+         'counter': counter, 'key_words': key_words}
     
     if file_name:
         os.makedirs(output_dir, exist_ok=True)
@@ -267,7 +281,7 @@ def process_sections(textdf, file_name=''):
             continue
     return total_df
 
-def clean_section(text_df, file_name='', output_dir='',section_lvl = False):
+def clean_section(text_df, file_name='', output_dir=''):
     
     start = time.time()
     # if index is not paper_id
@@ -278,12 +292,6 @@ def clean_section(text_df, file_name='', output_dir='',section_lvl = False):
     ids = text_df.index.values.astype(str)
         
     contents = text_df['whole_text'].values.tolist()
-    
-    # Add abstract to text
-    if not section_lvl:
-        abstracts = text_df['abstract'].values.tolist()
-
-        contents = [i + j for i, j in zip(contents, abstracts)]
     
     t = time.time()
     print(t-start)
@@ -322,8 +330,10 @@ def clean_section(text_df, file_name='', output_dir='',section_lvl = False):
 
     # Preprocessing: remove short text
     inds = find_longer_text(contents)
-    contents = itertools.compress(contents, inds)
-    ids = list(itertools.compress(ids, inds))
+    contents = [i for indx,i in enumerate(contents) if inds[indx] == True]
+    ids = [i for indx,i in enumerate(ids) if inds[indx]==True]
+    #contents = itertools.compress(contents, inds)
+    #ids = list(itertools.compress(ids, inds))
     
     #key_words = text_df.loc[ids]['key_words'].values
     print('Tokenizing')
@@ -343,8 +353,8 @@ def clean_section(text_df, file_name='', output_dir='',section_lvl = False):
     
     # Keep longer words
 #     word_list = [keep_longer_words(words) for words in  word_list]
-    tokenized_contents = map(keep_longer_words,  tokenized_contents)
-    
+    #tokenized_contents = map(keep_longer_words,  tokenized_contents)
+    tokenized_contents = map(filter_word_length, tokenized_contents)
     
     t = time.time()
     print(t-start)
@@ -362,6 +372,11 @@ def clean_section(text_df, file_name='', output_dir='',section_lvl = False):
     print('Bag of Words Representation')
     tokenized_contents = list(tokenized_contents)
 
+    
+    inds = find_longer_text_list(tokenized_contents)
+    tokenized_contents = [i for indx,i in enumerate(tokenized_contents) if inds[indx] == True]
+    ids = [i for indx,i in enumerate(ids) if inds[indx]==True]
+    
     dct = corpora.Dictionary(tokenized_contents) # make dct before corpus
 #     doc2bow = partial(dct.doc2bow,allow_update=True)
     
@@ -376,9 +391,13 @@ def clean_section(text_df, file_name='', output_dir='',section_lvl = False):
 
     t = time.time()
     print(t-start)
+        
+    word_list =  [[item for item in sublist] for sublist in tokenized_contents]
+    #counter=collections.Counter(word_list)
+    counter = collections.Counter((x for xs in word_list for x in set(xs)))
     
-    word_list =  [item for sublist in tokenized_contents for item in sublist]
-    counter=collections.Counter(word_list)
+    d = {'dct': dct, 'corpus': corpus, 'docs': tokenized_contents, 
+                 'counter': counter, 'ids': ids, 'contents': contents}
     
     if file_name:
         os.makedirs(output_dir, exist_ok=True)
@@ -386,7 +405,5 @@ def clean_section(text_df, file_name='', output_dir='',section_lvl = False):
 
 
         with open(output_file_name, 'wb') as f:  # Python 3: open(..., 'wb') 
-            d = {'dct': dct, 'corpus': corpus, 'docs': tokenized_contents, 
-                 'counter': counter, 'ids': ids, 'word_list':word_list}
             pickle.dump(d, f)
     return d
