@@ -42,6 +42,10 @@ def remove_stopwords(text):
     return ' '.join([word for word in text.split() if word not in stopwords]) 
     #return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
 
+# Preprocessing: remove rare occurrence words from counter 
+def reduce_counter(counter, k = 20):
+    return Counter(el for el in counter.elements() if counter[el] >= k)
+
 # Preprocessing: lemmatizing
 nlp = spacy.load('en', disable=['parser', 'ner'])
 
@@ -208,7 +212,16 @@ def clean_pdf(text_df, file_name='', output_dir='',section_lvl = False):
     
     inds = find_longer_text_list(tokenized_contents)
     tokenized_contents = [i for indx,i in enumerate(tokenized_contents) if inds[indx] == True]
+    ids = [i for indx,i in enumerate(ids) if inds[indx]==True]
+    
+    
+    #word_list =  [[item for item in sublist] for sublist in tokenized_contents]
+    #counter=collections.Counter(word_list)
+    counter = collections.Counter((x for xs in tokenized_contents for x in set(xs)))
 
+    counter = reduce_counter(counter)
+    
+    
     dct = corpora.Dictionary(tokenized_contents) # make dct before corpus
 #     doc2bow = partial(dct.doc2bow,allow_update=True)
     
@@ -226,13 +239,11 @@ def clean_pdf(text_df, file_name='', output_dir='',section_lvl = False):
 
 
     
-    word_list =  [[item for item in sublist] for sublist in tokenized_contents]
-    #counter=collections.Counter(word_list)
-    counter = collections.Counter((x for xs in word_list for x in set(xs)))
 
+    
 
     d = {'dct': dct, 'corpus': corpus, 'docs': tokenized_contents,
-         'counter': counter, 'key_words': key_words}
+         'counter': counter, 'ids': ids, 'key_words': key_words}
     
     if file_name:
         os.makedirs(output_dir, exist_ok=True)
@@ -242,9 +253,6 @@ def clean_pdf(text_df, file_name='', output_dir='',section_lvl = False):
         with open(output_file_name, 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump(d, f)
     return d
-
-def puppy():
-    print('puppy')
 
 def process_sections(textdf, file_name=''):
     def merge_sections(doc):
