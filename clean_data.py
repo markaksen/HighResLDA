@@ -44,7 +44,7 @@ def remove_stopwords(text):
 
 # Preprocessing: remove rare occurrence words from counter 
 def reduce_counter(counter, k = 20):
-    return Counter(el for el in counter.elements() if counter[el] >= k)
+    return collections.Counter(el for el in counter.elements() if counter[el] >= k)
 
 # Preprocessing: lemmatizing
 nlp = spacy.load('en', disable=['parser', 'ner'])
@@ -226,7 +226,7 @@ def clean_pdf(text_df, file_name='', output_dir='',section_lvl = False):
 #     doc2bow = partial(dct.doc2bow,allow_update=True)
     
     print('length of dct before filter_extreme: ', len(dct))
-    dct.filter_extremes() # using default params # filter dct before creating corpus
+    dct.filter_extremes(no_below=20) # using default params # filter dct before creating corpus
     print('length of dct after filter_extreme: ', len(dct))
     
 
@@ -389,7 +389,7 @@ def clean_section(text_df, file_name='', output_dir=''):
 #     doc2bow = partial(dct.doc2bow,allow_update=True)
     
     print('length of dct before filter_extreme: ', len(dct))
-    dct.filter_extremes() # using default params # filter dct before creating corpus
+    dct.filter_extremes(no_below=20) # using default params # filter dct before creating corpus
     print('length of dct after filter_extreme: ', len(dct))
     
 
