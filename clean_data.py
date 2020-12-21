@@ -389,13 +389,11 @@ def clean_section(text_df, file_name='', output_dir=''):
 #     doc2bow = partial(dct.doc2bow,allow_update=True)
     
     print('length of dct before filter_extreme: ', len(dct))
-    dct.filter_extremes(no_below=20) # using default params # filter dct before creating corpus
-    print('length of dct after filter_extreme: ', len(dct))
-    
-
+    dct.filter_extremes(no_below=20) # using default params # filter dct before creating corpus    
     # Make corpus after any changes to dct
-    corpus = list(map(lambda x: dct.doc2bow(x,allow_update=True), tokenized_contents))    
+    corpus = list(map(lambda x: dct.doc2bow(x,allow_update=False), tokenized_contents))    
 #     corpus = [dct.doc2bow(doc, allow_update=True) for doc in word_list]
+    print('length of dct after filter_extreme: ', len(dct))
 
     t = time.time()
     print(t-start)
