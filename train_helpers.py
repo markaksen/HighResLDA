@@ -42,7 +42,7 @@ def pmi_weights(sections_cleaned):
     for key,val in weights.items():
         weights[key] = (val - w_min) / (w_max - w_min)
     
-    return weights[0]
+    return weights
 
 def highres_weights(docs_cleaned, sections_cleaned):
     corpus = sections_cleaned['corpus']
@@ -105,8 +105,9 @@ def update_corpus(corpus, weights, weight_type=''):
 
 from gensim.models import LdaMulticore
 import logging
+import os
 
-def train(corpus, dct, docs, ids, field, num_topics):
+def train(corpus, dct, docs, ids, num_topics, field):
     model_dir= f'./models/{field}/k_{num_topics}/'
     os.makedirs(model_dir,exist_ok=True)
 
